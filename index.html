@@ -1,12 +1,19 @@
+-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Markdown to HTML Preview</title>
+  <title>Markdown to HTML Preview with Tabs</title>
+  <!-- Bootstrap CSS -->
   <link
     rel="stylesheet"
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+  />
+  <!-- Optional highlight.js theme -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/highlight.js/styles/default.min.css"
   />
   <style>
     /* Fallback styling in case Bootstrap fails to load */
@@ -15,62 +22,89 @@
       padding: 1em;
       background-color: #f8f9fa;
     }
-    #markdown-output {
-      padding: 1em;
-      border: 1px solid #dee2e6;
-      border-radius: 0.25rem;
-      background: #ffffff;
+    /* Style for markdown source textarea */
+    #markdown-source {
+      width: 100%;
+      height: 150px;
+      resize: vertical;
     }
   </style>
 </head>
 <body>
   <div class="container my-4">
-    <h1 class="mb-3">Markdown Preview</h1>
-    <div id="markdown-output" class="border p-3"></div>
+    <h1 class="mb-3">Markdown Preview with Tabs</h1>
+    
+    <!-- Markdown source input -->
+    <div class="mb-3">
+      <label for="markdown-source" class="form-label">Markdown Source</label>
+      <textarea id="markdown-source" class="form-control" placeholder="Enter Markdown here...">quick brown fox jumps over the lazy dog</textarea>
+    </div>
+    
+    <!-- Tabs for switching views -->
+    <ul class="nav nav-tabs" id="markdown-tabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="source-tab" data-bs-toggle="tab" data-bs-target="#source-pane" type="button" role="tab" aria-controls="source-pane" aria-selected="true">Markdown Source</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="preview-tab" data-bs-toggle="tab" data-bs-target="#preview-pane" type="button" role="tab" aria-controls="preview-pane" aria-selected="false">Rendered HTML</button>
+      </li>
+    </ul>
+    <!-- Tab contents -->
+    <div class="tab-content border border-top-0 p-3" id="markdown-tab-content" style="min-height:200px;">
+      <div class="tab-pane fade show active" id="source-pane" role="tabpanel" aria-labelledby="source-tab">
+        <!-- Keep the textarea visible here for editing -->
+      </div>
+      <div class="tab-pane fade" id="preview-pane" role="tabpanel" aria-labelledby="preview-tab">
+        <div id="markdown-output"></div>
+      </div>
+    </div>
   </div>
 
+  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/highlight.js/lib/core.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/highlight.js/lib/languages/javascript.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/highlight.js/lib/languages/python.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/highlight.js/lib/languages/java.js"></script>
   <script>
-    // Load additional languages as needed
+    // Register highlight.js languages
     hljs.registerLanguage('javascript', hljs.getLanguage('javascript'));
     hljs.registerLanguage('python', hljs.getLanguage('python'));
     hljs.registerLanguage('java', hljs.getLanguage('java'));
-    
-    (function() {
-      // Attachment content (simulating input.md)
-      const mdContent = "quick brown fox jumps over the lazy dog";
 
-      // Check for required script loads
-      const hasMarked = !!document.querySelector("script[src*='marked']");
-      const hasHighlight = !!document.querySelector("script[src*='highlight.js']");
-      // Render markdown
-      if (hasMarked && hasHighlight && mdContent.trim()) {
-        // Convert markdown to HTML
-        const html = marked(mdContent);
-        const outputDiv = document.querySelector('#markdown-output');
-        outputDiv.innerHTML = html;
+    // Initialize variables
+    const mdTextarea = document.getElementById('markdown-source');
+    const outputDiv = document.getElementById('markdown-output');
 
-        // Load highlight.js style
-        // optional: add a style for highlighting
-        // In this code, the style load is assumed done elsewhere or can be added 
-        // via a link to theme CSS, e.g.:
-        // <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js/styles/default.min.css" />
+    // Function to update rendered HTML
+    function updatePreview() {
+      const markdownText = mdTextarea.value;
+      // Convert markdown to HTML
+      const html = marked.parse(markdownText);
+      outputDiv.innerHTML = html;
+      // Highlight code blocks
+      outputDiv.querySelectorAll('pre code').forEach((block) => {
+        hljs.highlightBlock(block);
+      });
+    }
 
-        // Initialize syntax highlighting for code blocks
-        document.querySelectorAll('pre code').forEach((block) => {
-          hljs.highlightBlock(block);
-        });
+    // Initial render
+    updatePreview();
 
-        // Check for presence of <h
-        if (outputDiv.innerHTML.includes('<h')) {
-          // Condition fulfilled
+    // Sync Markdown source with rendered preview and keep in sync
+    mdTextarea.addEventListener('input', () => {
+      updatePreview();
+    });
+
+    // Optional: Update preview when tab is shown (to ensure latest content)
+    const tabTrigger = document.querySelectorAll('#markdown-tabs button');
+    tabTrigger.forEach((btn) => {
+      btn.addEventListener('shown.bs.tab', (event) => {
+        if (event.target.id === 'preview-tab') {
+          updatePreview();
         }
-      }
-    })();
+      });
+    });
   </script>
 </body>
 </html>
